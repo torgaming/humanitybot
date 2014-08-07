@@ -1,3 +1,14 @@
+#
+#             Main (Official) Cards Against Humanity Deck
+#
+# This file contains cards from the main deck of the official Cards
+# Against Humanity game.  Unlike Humanitybot, this file is distributed
+# under the Creative Commons BY-NC-SA 2.0 license. 
+#
+# Visit < https://creativecommons.org/licenses/by-nc-sa/2.0/ > or
+# < http://cardsagainsthumanity.com/ > for details.
+#
+
 def wcards():
     return [
     "A Gypsy curse.",
