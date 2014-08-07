@@ -1,4 +1,24 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
+#
+#       Humanitybot: A Cards-Against Humanity IRC Bot
+# -----------------------------------------------------------
+#      [ https://github.com/Breakthrough/humanitybot ]
+#
+# Copyright (c) 2013-2014, Matthew Ames <matthew@supermatt.net>
+#
+# Humanitybot is licensed under the BSD 2-Clause License; see the
+# included LICENSE file or visit the following page for details:
+# https://github.com/Breakthrough/humanitybot
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
+
 import socket
 import sys
 import re
