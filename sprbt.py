@@ -4,7 +4,8 @@
 # -----------------------------------------------------------
 #      [ https://github.com/Breakthrough/humanitybot ]
 #
-# Copyright (c) 2013-2014, Matthew Ames <matthew@supermatt.net>
+# Copyright (C) 2014 Brandon Castellano <www.bcastell.com>
+# Copyright (c) 2013-2014, Matthew Ames <www.supermatt.net>
 #
 # Humanitybot is licensed under the BSD 2-Clause License; see the
 # included LICENSE file or visit the following page for details:
@@ -20,6 +21,7 @@
 #
 
 import socket
+import ssl
 import sys
 import re
 import threading
@@ -28,11 +30,13 @@ from datetime import timedelta
 import select
 import functions
 
-class IRCConnector( threading.Thread):
-    def __init__ (self, host, port):
-        self.host = host
-        self.port = port
-        self.channel = "#cah"
+class IRCConnector(threading.Thread):
+    def __init__ (self, server):
+        self.host = server['host']
+        self.port = server['port']
+        self.channel = server['channel']
+        self.use_ssl = server['use_ssl']
+        self.admin_list = server['admin_list']
         self.identity = "superbot"
         self.realname = "superbot"
         self.hostname = "supermatt.net"
@@ -53,6 +57,8 @@ class IRCConnector( threading.Thread):
     def run (self):
         try:
             self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            if self.use_ssl:
+                self.s = ssl.wrap_socket(self.s)
         except:
             print 'Failed to create socket'
             sys.exit()
@@ -62,14 +68,13 @@ class IRCConnector( threading.Thread):
 
         #self.s.connect((remote_ip, self.port))
         self.s.connect((self.host, self.port))
-        self.s.setblocking(0)
+        self.s.setblocking(1)
         message1 = "NICK %s\r\n" %self.botname
         message2 = 'USER %s %s %s :%s\r\n' %(self.identity, self.hostname, self.host, self.realname)
         self.s.send(message1)
         self.s.send(message2)
 
         g = functions.Game(self)
-
 
         while 1:
             line = None
@@ -81,13 +86,12 @@ class IRCConnector( threading.Thread):
                 print line
 
             if line:
-
                 #self.output(line)
                 line.strip()
-                splitline = line.split(" :")
+                splitline = line.split() #" :")
 
-                if  "PING" in splitline[0]:
-                    pong = "PONG %s" %splitline[1]
+                if "PING" in splitline[0]:
+                    pong = "PONG %s" % splitline[1]
                     self.output(pong)
                     self.s.send(pong)
 
@@ -129,18 +133,37 @@ class IRCConnector( threading.Thread):
                     if channel == self.botname:
                         channel = username
 
-                    if lower == "$kill" and username == "sprmtt":
-                        self.s.send("QUIT :Bot quit\n")
-                    elif lower == "$test":
-                        self.allmessages.append({"message": "test message", "channel": channel})
-                    elif lower == "$reload":
-                        try:
-                            reload(functions)
-                            self.allmessages.append({"message": "Reloaded functions", "channel": channel})
-                        except:
-                            self.allmessages.append({"message": "Unable to reload due to errors", "channel": channel})
-                    else:
-                        self.allmessages += functions.actioner(g, message, username, channel, self.channel)
+                    if username in self.admin_list:
+                        
+                        if lower == "$kill":
+                            print 'QUIT: %s' % username
+                            self.s.send("QUIT :Bot quit\n")
+
+                        elif lower == '$join': 
+                            joinchannel = "JOIN %s\n" % self.channel
+                            self.output(joinchannel)
+                            #self.s.send("PRIVMSG nickserv :identify hum4n1ty\n")
+                            self.s.send(joinchannel)
+                            self.inchannel = True
+
+                        elif lower == '$whois': 
+                            joinchannel = "WHOIS sigint\n"
+                            self.output(joinchannel)
+                            #self.s.send("PRIVMSG nickserv :identify hum4n1ty\n")
+                            self.s.send(joinchannel)
+                            self.inchannel = True
+
+                        elif lower == "$test":
+                            self.allmessages.append({"message": "test message", "channel": channel})
+                        
+                        elif lower == "$reload":
+                            try:
+                                reload(functions)
+                                self.allmessages.append({"message": "Reloaded functions", "channel": channel})
+                            except:
+                                self.allmessages.append({"message": "Unable to reload due to errors", "channel": channel})
+                        else:
+                            self.allmessages += functions.actioner(g, message, username, channel, self.channel)
 
                 if re.search(":Closing Link:", line):
                     sys.exit()
@@ -161,11 +184,13 @@ class IRCConnector( threading.Thread):
 
 
 irc_connections = [{
-                        "host": "irc.darkmyst.org",
-                        "port": 6667,
-                        "channels": ["#cah"]
-                    }]
+    "host": "irc.darkmyst.org",
+    "port": 6667,
+    "channel": "#cah",
+    "use_ssl": True,
+    "admin_list": [ 'supermatt', 'mattsuper' ] 
+}]
 
-for irc in irc_connections:
-    IRCThread = IRCConnector(irc['host'], irc['port'])
+for server in irc_connections:
+    IRCThread = IRCConnector(server)
     IRCThread.start()
