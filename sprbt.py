@@ -134,20 +134,13 @@ class IRCConnector(threading.Thread):
                         channel = username
 
                     if username in self.admin_list:
-                        
+
                         if lower == "$kill":
                             print 'QUIT: %s' % username
                             self.s.send("QUIT :Bot quit\n")
 
                         elif lower == '$join': 
                             joinchannel = "JOIN %s\n" % self.channel
-                            self.output(joinchannel)
-                            #self.s.send("PRIVMSG nickserv :identify hum4n1ty\n")
-                            self.s.send(joinchannel)
-                            self.inchannel = True
-
-                        elif lower == '$whois': 
-                            joinchannel = "WHOIS sigint\n"
                             self.output(joinchannel)
                             #self.s.send("PRIVMSG nickserv :identify hum4n1ty\n")
                             self.s.send(joinchannel)
