@@ -14,20 +14,13 @@ Features
  - nick-based admin commands
  - official Cards Against Humanity deck, easily configurable (see `cards.py`)
 
-To-Do List
--------------
-
- - add official UK & Canadian decks
- - move bot configuration into separate JSON/INI file
- - include changelog / update version information
-
-
 
 Download & Requirements
 ---------------------------
 
-You can download the latest stable version of humanitybot [from the releases page](https://github.com/Breakthrough/humanitybot/releases).  humanitybot depends only on Python 2 (tested on 2.7.3).
+The latest stable version of humanitybot is `v0.2.0` and can be [downloaded here](https://github.com/Breakthrough/humanitybot/archive/v0.2.0.zip); for other versions, see the [releases page](https://github.com/Breakthrough/humanitybot/releases).
 
+humanitybot depends only on Python 2 (tested on 2.7.3).
 
 
 Configuration & Running
@@ -45,10 +38,18 @@ Admin Command List
 
 The following commands can only be used if the nickname of the person appears in the `admin_list` for that particular server:
 
- -`$join` - makes humanitybot join the configured channel for the server, ready for a game
- -`$kill` - forces humanitybot to disconnect and quit
- -`$test` - test command, should see response from humanitybot
- -`$reload` - reloads all game-logic functions
+ - `$join` - makes humanitybot join the configured channel for the server, ready for a game
+ - `$kill` - forces humanitybot to disconnect and quit
+ - `$test` - test command, should see response from humanitybot
+ - `$reload` - reloads all game-logic functions
+
+
+To-Do List
+-------------
+
+ - add official UK & Canadian decks
+ - move bot configuration into separate JSON/INI file
+ - include changelog / update version information
 
 
 License
@@ -57,4 +58,3 @@ License
 humanitybot is licensed under BSD-2 Clause; see the LICENSE file for details.
 
 The included cards file (`cards.py`) contains material from the official Cards Against Humanity, distributed under a Creative Commons BY-NC-SA 2.0 license.  See the `cards.py` file for details.
-
