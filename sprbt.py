@@ -25,6 +25,7 @@ import ssl
 import sys
 import re
 import threading
+import time
 from datetime import datetime
 from datetime import timedelta
 import select
@@ -32,13 +33,17 @@ import functions
 
 class IRCConnector(threading.Thread):
     def __init__ (self, server):
+        # TODO: Just replace the below with the server dict() directly.
         self.host = server['host']
         self.port = server['port']
         self.channel = server['channel']
         self.use_ssl = server['use_ssl']
+        self.hb_interval = server['heartbeat_interval']
+        self.hb_last    = time.time()
+        self.delay_time = 0.1  # Time to wait in seconds between loop iterations if hb_interval > 0
         self.admin_list = server['admin_list']
         self.botname = server['nickname']   # IRC nickname
-        self.nickserv_password = server['nickserv_password']
+        self.ns_pass = server['nickserv_password']
         self.identity = "superbot"
         self.realname = "superbot"
         self.hostname = "supermatt.net"
@@ -69,7 +74,11 @@ class IRCConnector(threading.Thread):
 
         #self.s.connect((remote_ip, self.port))
         self.s.connect((self.host, self.port))
-        self.s.setblocking(1)
+
+        # As per issue #3, need to leave socket asynchronous for sending hearbeats.
+        if not self.hb_interval > 0:
+            self.s.setblocking(1)  # If no heartbeat, set synchronous.
+        
         message1 = "NICK %s\r\n" %self.botname
         message2 = 'USER %s %s %s :%s\r\n' % (
             self.identity, self.hostname, self.host, self.realname )
@@ -79,6 +88,17 @@ class IRCConnector(threading.Thread):
         g = functions.Game(self)
 
         while 1:
+
+            #
+            # If we need to send a heartbeat/PING... (see issue #3)
+            #
+            if self.hb_interval > 0:
+                # TODO: Only delay if no data/message recieved, then update HB timer.
+                time.sleep(self.delay_time)
+                if (time.time() - self.hb_last) > self.hb_interval:
+                    self.hb_last = time.time()
+                    self.s.send("PING %s\n" % self.host)
+
             line = None
             message = None
 
@@ -148,8 +168,7 @@ class IRCConnector(threading.Thread):
                             self.s.send("QUIT :Bot quit\n")
 
                         elif lower == '!ns': 
-                            self.s.send("PRIVMSG nickserv :identify %s\n" %
-                                self.nickserv_password)
+                            self.s.send("PRIVMSG nickserv :identify %s\n" % self.ns_pass)
 
                         elif lower == '!join': 
                             joinchannel = "JOIN %s\n" % self.channel
@@ -194,7 +213,7 @@ class IRCConnector(threading.Thread):
                     self.lastmessage = timestamp
             #print self.allmessages
 
-
+# TODO: Move below into separate config/settings file (issue #2).
 irc_connections = [{
     "host": "irc.darkmyst.org",
     "port": 6667,
@@ -202,9 +221,17 @@ irc_connections = [{
     "nickserv_password": "NICKSERV_PASSWORD",
     "channel": "#cah",
     "use_ssl": True,
-    "admin_list": [ 'some_admin_nick', 'another_bot_op' ] 
+    "admin_list": [ 'some_admin_nick', 'another_bot_op' ],
+    "heartbeat_interval": 120,  # Time in seconds between heartbeat messages (set 0 to disable)
 }]
 
 for server in irc_connections:
     IRCThread = IRCConnector(server)
     IRCThread.start()
+
+# Currently does not quit gracefully (issue #5), need to track thread status and !kill messages.
+
+# TODO: Monitor threads (keep a list of refs/connections), restart if required
+#       (e.g. thread closes without seeing !kill).
+# TODO: Watch for !kill command from any thread - need a message queue
+#       (e.g. graceful exit).
