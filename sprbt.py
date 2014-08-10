@@ -37,10 +37,11 @@ class IRCConnector(threading.Thread):
         self.channel = server['channel']
         self.use_ssl = server['use_ssl']
         self.admin_list = server['admin_list']
+        self.botname = server['nickname']   # IRC nickname
+        self.nickserv_password = server['nickserv_password']
         self.identity = "superbot"
         self.realname = "superbot"
         self.hostname = "supermatt.net"
-        self.botname = "humanitybot"
         self.allmessages = []
         self.lastmessage = datetime.now()
         self.pulsetime = 500
@@ -70,7 +71,8 @@ class IRCConnector(threading.Thread):
         self.s.connect((self.host, self.port))
         self.s.setblocking(1)
         message1 = "NICK %s\r\n" %self.botname
-        message2 = 'USER %s %s %s :%s\r\n' %(self.identity, self.hostname, self.host, self.realname)
+        message2 = 'USER %s %s %s :%s\r\n' % (
+            self.identity, self.hostname, self.host, self.realname )
         self.s.send(message1)
         self.s.send(message2)
 
@@ -95,12 +97,18 @@ class IRCConnector(threading.Thread):
                     self.output(pong)
                     self.s.send(pong)
 
-                if re.search(":End of /MOTD command.", line):
-                        joinchannel = "JOIN %s\n" %self.channel
-                        self.output(joinchannel)
-                        self.s.send("PRIVMSG nickserv :identify hum4n1ty\n")
-                        self.s.send(joinchannel)
-                        self.inchannel = True
+                ##
+                ## [Issue #4] Auto-send NickServ password when MOTD ends
+                ## https://github.com/Breakthrough/humanitybot/issues/4
+                ##
+                ## Replaced with !ns trigger/command until issue resolved.
+                ##
+                #if re.search(":End of /MOTD command.", line):
+                #        joinchannel = "JOIN %s\n" %self.channel
+                #        self.output(joinchannel)
+                #        self.s.send("PRIVMSG nickserv :identify hum4n1ty\n")
+                #        self.s.send(joinchannel)
+                #        self.inchannel = True
 
                 if re.search("^:.* NICK .*$", line):
                     nicksplit = line.split()
@@ -135,21 +143,32 @@ class IRCConnector(threading.Thread):
 
                     if username in self.admin_list:
 
-                        if lower == "$kill":
+                        if lower == "!kill":
                             print 'QUIT: %s' % username
                             self.s.send("QUIT :Bot quit\n")
 
-                        elif lower == '$join': 
+                        elif lower == '!ns': 
+                            self.s.send("PRIVMSG nickserv :identify %s\n" %
+                                self.nickserv_password)
+
+                        elif lower == '!join': 
                             joinchannel = "JOIN %s\n" % self.channel
                             self.output(joinchannel)
                             #self.s.send("PRIVMSG nickserv :identify hum4n1ty\n")
                             self.s.send(joinchannel)
                             self.inchannel = True
 
-                        elif lower == "$test":
+#                        elif lower == '$whois': 
+#                            joinchannel = "WHOIS supermatt\n"
+#                            self.output(joinchannel)
+#                            #self.s.send("PRIVMSG nickserv :identify hum4n1ty\n")
+#                            self.s.send(joinchannel)
+#                            self.inchannel = True
+
+                        elif lower == "!test":
                             self.allmessages.append({"message": "test message", "channel": channel})
                         
-                        elif lower == "$reload":
+                        elif lower == "!reload":
                             try:
                                 reload(functions)
                                 self.allmessages.append({"message": "Reloaded functions", "channel": channel})
@@ -179,9 +198,11 @@ class IRCConnector(threading.Thread):
 irc_connections = [{
     "host": "irc.darkmyst.org",
     "port": 6667,
+    "nickname": "humanitybot",
+    "nickserv_password": "NICKSERV_PASSWORD",
     "channel": "#cah",
     "use_ssl": True,
-    "admin_list": [ 'supermatt', 'mattsuper' ] 
+    "admin_list": [ 'some_admin_nick', 'another_bot_op' ] 
 }]
 
 for server in irc_connections:
