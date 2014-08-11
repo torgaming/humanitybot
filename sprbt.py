@@ -29,7 +29,10 @@ import time
 from datetime import datetime
 from datetime import timedelta
 import select
+
+import humanitybot_config
 import functions
+
 
 class IRCConnector(threading.Thread):
     def __init__ (self, server):
@@ -213,19 +216,7 @@ class IRCConnector(threading.Thread):
                     self.lastmessage = timestamp
             #print self.allmessages
 
-# TODO: Move below into separate config/settings file (issue #2).
-irc_connections = [{
-    "host": "irc.darkmyst.org",
-    "port": 6667,
-    "nickname": "humanitybot",
-    "nickserv_password": "NICKSERV_PASSWORD",
-    "channel": "#cah",
-    "use_ssl": True,
-    "admin_list": [ 'some_admin_nick', 'another_bot_op' ],
-    "heartbeat_interval": 120,  # Time in seconds between heartbeat messages (set 0 to disable)
-}]
-
-for server in irc_connections:
+for server in humanitybot_config.irc_connections:
     IRCThread = IRCConnector(server)
     IRCThread.start()
 
