@@ -1,3 +1,4 @@
+I(torgaming) did not write this bot but I will try to build on documentation and other stuff to improve from the original software. I also might look into(no promises) changes that https://github.com/Crysknife007/humanitybot did which was also forked from https://github.com/Breakthrough/humanitybot
 
 humanitybot
 ===========
